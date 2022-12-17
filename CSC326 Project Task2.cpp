@@ -18,18 +18,18 @@ int* A;
 int* B;
 char response;
 int tally = 0;
-int totalTime = 0;
-int totalTime2 = 0;
-int totalTime3 = 0;
-int totalTime4 = 0;
-int totalTime5 = 0;
-int totalTime6 = 0;
-long totalSteps = 0;
-long totalSteps2 = 0;
-long totalSteps3 = 0;
-long totalSteps4 = 0;
-long totalSteps5 = 0;
-long totalSteps6 = 0;
+int totalTime;
+int totalTime2;
+int totalTime3;
+int totalTime4;
+int totalTime5;
+int totalTime6;
+long long int totalSteps;
+long long int totalSteps2;
+long long int totalSteps3;
+long long int totalSteps4;
+long long int totalSteps5;
+long long int totalSteps6;
 
 
 
@@ -73,7 +73,8 @@ void BubbleSort(int arr[], int n) {
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<std::chrono::microseconds> (stop - start);
     totalTime += duration.count();
-        totalSteps+=steps;
+	totalSteps+=steps;
+    duration.zero();
 }
 
 
@@ -205,6 +206,7 @@ void insertionsort(int A[], int size)
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<std::chrono::microseconds> (stop - start);
     totalTime3 += duration.count();
+    duration.zero();
     totalSteps3 += steps;
 }
 
@@ -275,6 +277,7 @@ void selectionSort(int selectionArray[], int n) {
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<std::chrono::microseconds> (stop - start);
     totalTime5 += duration.count();
+    duration.zero();
     totalSteps5 += steps;
 }
 
@@ -316,11 +319,73 @@ void heapSort(int heapArray[], int n) {
 }
 
 
+const int INSERTION_SORT_THRESHOLD = 32;
+
+void merge(int* array, int size, int* temp) {
+    int middle = size / 2;
+    int i = 0, j = middle, k = 0;
+    while (i < middle && j < size) {
+        if (array[i] < array[j]) {
+            temp[k++] = array[i++];
+        }
+        else {
+            temp[k++] = array[j++];
+        }
+    }
+    while (i < middle) {
+        temp[k++] = array[i++];
+    }
+    while (j < size) {
+        temp[k++] = array[j++];
+    }
+    for (int i = 0; i < size; i++) {
+        array[i] = temp[i];
+    }
+}
+
+void merge_sort_combine(int* array, int size, int* temp) {
+    if (size <= INSERTION_SORT_THRESHOLD) {
+        return;
+    }
+    int middle = size / 2;
+    merge_sort_combine(array, middle, temp);
+    merge_sort_combine(array + middle, size - middle, temp);
+    merge(array, size, temp);
+}
+
+void combine_merge_sort_and_insertion_sort(int* array, int size) {
+    if (size <= INSERTION_SORT_THRESHOLD) {
+        // Use insertion sort for small arrays
+        insertionsort(array, size);
+    }
+    else {
+        // Use merge sort for larger arrays
+        int* temp = new int[size];
+        merge_sort_combine(array, size, temp);
+        delete[] temp;
+    }
+}
+
+
 int main() {
 
 
 
     srand(unsigned(time(0)));
+
+     totalTime = 0;
+    totalTime2 = 0;
+    totalTime3 = 0;
+    totalTime4 = 0;
+    totalTime5 = 0;
+    totalTime6 = 0;
+    int totalTime7 = 0;
+    totalSteps = 0;
+    totalSteps2 = 0;
+    totalSteps3 = 0;
+    totalSteps4 = 0;
+    totalSteps5 = 0;
+    totalSteps6 = 0;
 
 
     do {
@@ -358,13 +423,15 @@ int main() {
             ResetArrayB();
 
 
-            auto start1 = std::chrono::high_resolution_clock::now();
+            chrono::high_resolution_clock::time_point start1 = chrono::high_resolution_clock::now();
 
             MergeSort(B, 0, len - 1);
 
             auto stop1 = std::chrono::high_resolution_clock::now();
-            auto duration1 = chrono::duration_cast<std::chrono::microseconds> (stop1 - start1);
-            totalTime2 += duration1.count();
+            chrono::high_resolution_clock::time_point end1 = chrono::high_resolution_clock::now();
+            chrono::duration<double, std::micro> timeRequired2 = (end1 - start1);
+            totalTime2 += timeRequired2.count();
+
 
             s.setData(B);
 
@@ -393,6 +460,8 @@ int main() {
             auto stop2 = std::chrono::high_resolution_clock::now();
             auto duration2 = chrono::duration_cast<std::chrono::microseconds> (stop2 - start2);
             totalTime4 += duration2.count();
+            duration2.zero();
+
 
             s.setData(B);
 
@@ -422,13 +491,46 @@ int main() {
             auto stop3 = std::chrono::high_resolution_clock::now();
             auto duration3 = chrono::duration_cast<std::chrono::microseconds> (stop3 - start3);
             totalTime6 += duration3.count();
+            duration3.zero();
+
 
             s.setData(B);
 
             //s.print();
             //End HeapSort
+
+            //combine merge and insertion sort
+        	ResetArrayB();
+            auto start4 = std::chrono::high_resolution_clock::now();
+
+            combine_merge_sort_and_insertion_sort(B, len);
+
+            auto stop4 = std::chrono::high_resolution_clock::now();
+            auto duration4 = chrono::duration_cast<std::chrono::microseconds> (stop4 - start4);
+            totalTime7 += duration4.count();
+            duration4.zero();
+
+            s.setData(B);
+
+
+            // end combine merge and insertion
         }
 
+
+         
+        cout << "AVG Bubble Sort Steps: " << totalSteps / 50 << " For size :" << input << endl;
+        cout << "AVG Bubble Sort Time: " << totalTime / 50 << " For size: " << input  << endl;
+        cout << "AVG Merge Sort Steps: " << totalSteps2 / 50 << " For size: " << input << endl;
+        cout << "AVG Merge Sort Time: " << totalTime2 / 50 << " For size: " << input << endl;
+        cout << "AVG Insertion Sort Steps: " << totalSteps3 / 50 << " For size: " << input << endl;
+        cout << "AVG Insertion Sort Time: " << totalTime3 / 50 << " For size: " << input << endl;
+        cout << "AVG Quick Sort Steps: " << totalSteps4 / 50 << " For size: " << input << endl;
+        cout << "AVG Quick Sort Time: " << totalTime4 / 50 << " For size: " << input << endl;
+        cout << "AVG Selection Sort Steps: " << totalSteps5 / 50 << " For size: " << input << endl;
+        cout << "AVG Selection Sort Time: " << totalTime5 / 50 << " For size: " << input << endl;
+        cout << "AVG Heap Sort Steps: " << totalSteps6 / 50 << " For size: " << input << endl;
+        cout << "AVG Heap Sort Time: " << totalTime6 / 50 << " For size: " << input << endl;
+        cout << "AVG Merge Sort and Insertion Sort Time: " << totalTime7 / 50 << " For size: " << input << endl;
 
         delete A;
         delete B;
@@ -443,18 +545,6 @@ int main() {
     } while (input < MAX);
 
 
-    cout << "AVG Bubble Sort Steps: " << totalSteps / 50 << endl;
-    cout << "AVG Bubble Sort Time: " << totalTime / 50 << endl;
-    cout << "AVG Merge Sort Steps: "  << totalSteps2 / 50 << endl;
-    cout << "AVG Merge Sort Time: " << totalTime2 / 50 << endl;
-    cout << "AVG Insertion Sort Steps: " << totalSteps3 / 50 << endl;
-    cout << "AVG Insertion Sort Time: " << totalTime3 / 50 << endl;
-    cout << "AVG Quick Sort Steps: " << totalSteps4 / 50 << endl;
-    cout << "AVG Quick Sort Time: " << totalTime4 / 50 << endl;
-    cout << "AVG Selection Sort Steps: " << totalSteps5 / 50 << endl;
-    cout << "AVG Selection Sort Time: " << totalTime5 / 50 << endl;
-    cout << "AVG Heap Sort Steps: " << totalSteps6 / 50 << endl;
-    cout << "AVG Heap Sort Time: " << totalTime6 / 50 << endl;
 
     return 0;
 }
